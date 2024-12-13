@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Головна</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <header class="block block-1">
+        <h1>Домашні улюбленці</h1>
+    </header>
+    <nav class="block block-2">
+        <ol>
+            <li><a href="index.html">Головна</a></li>
+        </ol>
+    </nav>
+    <main class="block block-3">
+        <img src="pets.jpeg" alt="Фотографія домашніх тварин" >
+    </main>
+
+    <aside class="block block-4">
+        <p>Тварини — це неймовірно різноманітна група живих організмів...</p>
+        <table id="events-table">
+            <tr>
+                <th>Події LocalStorage</th>
+                <th>Події з сервера</th>
+            </tr>
+        </table>
+    </aside>
+
+    <footer class="block block-5">
+        <button id="play">Play</button>
+    </footer>
+
+    <div id="work">
+        <div id="anim"></div>
+        <div id="controls">
+            <button id="close">Close</button>
+            <button id="start">Start</button>
+            <button id="reload" style="display: none;">Reload</button>
+            <p id="event-log"></p>
+        </div>
+    </div>
+
+    <div class="block block-6">
+        <h1>Лабораторна робота з web-програмування</h1>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const work = document.getElementById('work');
+        const anim = document.getElementById('anim');
+        const startButton = document.getElementById('start');
+        const reloadButton = document.getElementById('reload');
+        const closeButton = document.getElementById('close');
+        const eventLog = document.getElementById('event-log');
+        const eventsTable = document.getElementById('events-table');
+        let squares = [];
+        let interval;
+
+        function logEvent(message) {
+            const time = new Date().toLocaleTimeString();
+            const logMessage = `${time}: ${message}`;
+            eventLog.innerHTML += `<p>${logMessage}</p>`;
+
+            // Збереження в LocalStorage
+            const storedEvents = JSON.parse(localStorage.getItem('events')) || [];
+            storedEvents.push(logMessage);
+            localStorage.setItem('events', JSON.stringify(storedEvents));
+
+            // Надсилання події на сервер
+            fetch('save_event.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ time, message }),
+            }).catch(err => console.error('Помилка збереження події на сервері:', err));
+        }
+
+        function createSquare(color) {
+            const square = document.createElement('div');
+            square.classList.add('moving-square');
+            square.style.backgroundColor = color;
+            square.style.top = color === 'green' ? '0' : `${anim.offsetHeight - 15}px`;
+            square.style.left = `${Math.random() * (anim.offsetWidth - 15)}px`;
+            anim.appendChild(square);
+            return {
+                element: square,
+                x: parseFloat(square.style.left),
+                y: parseFloat(square.style.top),
+                dx: (Math.random() > 0.5 ? 1 : -1) * 2,
+                dy: (Math.random() > 0.5 ? 1 : -1) * 2,
+            };
+        }
+
+        function moveSquares() {
+            let allInTopHalf = true;
+            let allInBottomHalf = true;
+
+            squares.forEach((square, index) => {
+                square.x += square.dx;
+                square.y += square.dy;
+
+                // Відбивання від стінок
+                if (square.x <= 0 || square.x >= anim.offsetWidth - 15) {
+                    square.dx *= -1;
+                    logEvent(`Квадрат ${index + 1} відбився від бокової стінки`);
+                }
+                if (square.y <= 0 || square.y >= anim.offsetHeight - 15) {
+                    square.dy *= -1;
+                    logEvent(`Квадрат ${index + 1} відбився від ${square.y <= 0 ? 'верхньої' : 'нижньої'} стінки`);
+                }
+
+                square.element.style.left = `${square.x}px`;
+                square.element.style.top = `${square.y}px`;
+
+                // Перевірка положення квадратів
+                if (square.y >= anim.offsetHeight / 2) {
+                    allInTopHalf = false;
+                } else {
+                    allInBottomHalf = false;
+                }
+            });
+
+            // Зупинка анімації, якщо всі квадрати в одній половині
+            if (allInTopHalf || allInBottomHalf) {
+                clearInterval(interval);
+                logEvent('Анімація зупинена: всі квадрати в одній половині');
+            }
+        }
+
+        startButton.addEventListener('click', () => {
+            squares = [
+                createSquare('green'),
+                createSquare('orange'),
+            ];
+            interval = setInterval(moveSquares, 50);
+            logEvent('Анімація розпочата');
+        });
+
+        reloadButton.addEventListener('click', () => {
+            squares.forEach(square => square.element.remove());
+            squares = [];
+            reloadButton.style.display = 'none';
+            startButton.style.display = 'inline-block';
+            logEvent('Квадрати скинуто');
+        });
+
+        closeButton.addEventListener('click', () => {
+            clearInterval(interval);
+            work.style.display = 'none';
+            logEvent('Анімація зупинена');
+
+            // Зчитування подій із сервера
+            fetch('get_events.php')
+                .then(res => res.json())
+                .then(serverEvents => {
+                    const localEvents = JSON.parse(localStorage.getItem('events')) || [];
+                    localEvents.forEach(event => {
+                        const row = eventsTable.insertRow();
+                        row.insertCell(0).textContent = event;
+                        row.insertCell(1).textContent = '';
+                    });
+                    serverEvents.forEach(event => {
+                        const row = eventsTable.insertRow();
+                        row.insertCell(0).textContent = '';
+                        row.insertCell(1).textContent = `${event.time}: ${event.message}`;
+                    });
+                })
+                .catch(err => console.error('Помилка зчитування подій із сервера:', err));
+        });
+
+        document.getElementById('play').addEventListener('click', () => {
+            work.style.display = 'block';
+            logEvent('Вікно відкрито');
+        });
+    });
+</script>
+</body>
+</html>

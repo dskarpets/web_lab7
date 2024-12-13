@@ -1,0 +1,132 @@
+body {
+    font-family: Montserrat, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.container {
+    display: grid;
+    grid-template-areas:
+        "block-1 block-1 block-1"
+        "block-2 block-3 block-4"
+        "block-2 block-5 block-4"
+        "block-6 block-6 block-4";
+
+    grid-template-rows: 150px 5fr 1fr 150px;;
+    grid-template-columns: 1fr 3fr 1fr;
+    height: 100vh;
+}
+
+.block {
+    padding: 20px;
+}
+
+.block-1 {
+    display: flex;
+    align-items: center;
+    grid-area: block-1;
+    background-color: #216869;
+    color: #eef0eb;
+}
+
+.block-2 {
+    grid-area: block-2;
+    background-color: #9cc5a1;
+    font-size: 20px;
+}
+
+.block-3 { grid-area: block-3; background-color: white; }
+.block-4 { grid-area: block-4; background-color: #9cc5a1; }
+.block-5 { grid-area: block-5; background-color: #49a078; }
+
+.block-6 {
+    display: flex;
+    align-items: center;
+    grid-area: block-6;
+    background-color: #216869;
+    color: #eef0eb;
+}
+
+.image-container img{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1024px;
+    height: 640px;
+}
+
+h1, h2 {
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+    color: #000;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+#work {
+    position: fixed;
+    width: calc(45% + 10px);
+    height: calc(85% + 50px);
+    background: rgba(0, 0, 0, 0.5);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none; /* Спочатку прихований */
+    z-index: 100;
+    border: 2px solid #000;
+}
+
+#anim {
+    position: relative;
+    width: 45%;
+    height: 85%;
+    margin: auto;
+    border: 5px solid red;
+    overflow: hidden;
+}
+
+#anim::before, #anim::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    left: 0;
+    background-size: 32px 32px;
+}
+
+#anim::before {
+    top: 0;
+    background-image: url('texture1.png');
+}
+
+#anim::after {
+    bottom: 0;
+    background-image: url('texture2.png');
+}
+
+.moving-square {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    z-index: 10; /* Додаємо шар для перекриття текстур */
+}
+
+#controls {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: scroll; /* Додає вертикальну прокрутку */
+    max-height: 150px; /* Обмеження висоти для зручності перегляду */
+}
+
+#event-log {
+    font-size: 14px;
+    color: #333;
+    white-space: pre-wrap; /* Для коректного відображення багаторядкових записів */
+}
