@@ -155,17 +155,32 @@
             clearInterval(interval);
             work.style.display = 'none';
             logEvent('Анімація зупинена');
+            loadEvents();
+        });
 
-            // Зчитування подій із сервера
+        function loadEvents() {
+            // Очистка таблиці перед завантаженням нових даних
+            while (eventsTable.rows.length > 1) {
+                eventsTable.deleteRow(1);
+            }
+
+            // Завантаження подій із LocalStorage
+            const localEvents = JSON.parse(localStorage.getItem('events')) || [];
+            localEvents.forEach(event => {
+                const row = eventsTable.insertRow();
+                row.insertCell(0).textContent = event;
+                row.insertCell(1).textContent = '';
+            });
+
+            // Завантаження подій із сервера
             fetch('get_events.php')
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`Помилка сервера: ${res.status}`);
+                    }
+                    return res.json();
+                })
                 .then(serverEvents => {
-                    const localEvents = JSON.parse(localStorage.getItem('events')) || [];
-                    localEvents.forEach(event => {
-                        const row = eventsTable.insertRow();
-                        row.insertCell(0).textContent = event;
-                        row.insertCell(1).textContent = '';
-                    });
                     serverEvents.forEach(event => {
                         const row = eventsTable.insertRow();
                         row.insertCell(0).textContent = '';
@@ -173,7 +188,7 @@
                     });
                 })
                 .catch(err => console.error('Помилка зчитування подій із сервера:', err));
-        });
+        }
 
         document.getElementById('play').addEventListener('click', () => {
             work.style.display = 'block';
