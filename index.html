@@ -85,18 +85,28 @@
         function createSquare(color) {
             const square = document.createElement('div');
             square.classList.add('moving-square');
+
+            // Визначення початкової позиції з урахуванням відступів
+            const margin = 20; // Мінімальна відстань від меж
+            const x = Math.random() * (anim.offsetWidth - 15 - 2 * margin) + margin;
+            const y = color === 'green'
+                ? margin // Для зелених — ближче до верхньої межі
+                : anim.offsetHeight - 15 - margin; // Для помаранчевих — ближче до нижньої межі
+
             square.style.backgroundColor = color;
-            square.style.top = color === 'green' ? '0' : `${anim.offsetHeight - 15}px`;
-            square.style.left = `${Math.random() * (anim.offsetWidth - 15)}px`;
+            square.style.left = `${x}px`;
+            square.style.top = `${y}px`;
             anim.appendChild(square);
+
             return {
                 element: square,
-                x: parseFloat(square.style.left),
-                y: parseFloat(square.style.top),
+                x: x,
+                y: y,
                 dx: (Math.random() > 0.5 ? 1 : -1) * 2,
                 dy: (Math.random() > 0.5 ? 1 : -1) * 2,
             };
         }
+
 
         function moveSquares() {
             let allInTopHalf = true;
@@ -131,6 +141,8 @@
             if (allInTopHalf || allInBottomHalf) {
                 clearInterval(interval);
                 logEvent('Анімація зупинена: всі квадрати в одній половині');
+                startButton.style.display = 'none';
+                reloadButton.style.display = 'inline-block';
             }
         }
 
@@ -139,8 +151,10 @@
                 createSquare('green'),
                 createSquare('orange'),
             ];
-            interval = setInterval(moveSquares, 50);
+            interval = setInterval(moveSquares, 30);
             logEvent('Анімація розпочата');
+
+            startButton.disabled = true;
         });
 
         reloadButton.addEventListener('click', () => {
@@ -149,6 +163,7 @@
             reloadButton.style.display = 'none';
             startButton.style.display = 'inline-block';
             logEvent('Квадрати скинуто');
+            startButton.disabled = false;
         });
 
         closeButton.addEventListener('click', () => {
@@ -195,6 +210,29 @@
             logEvent('Вікно відкрито');
         });
     });
+
+    const tableStyles = document.createElement('style');
+    tableStyles.textContent = `
+    #events-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        max-height: 60%; /* Максимальна висота таблиці */
+        overflow-y: auto; /* Вертикальний скрол */
+        display: block; /* Для активації прокрутки */
+    }
+    #events-table th, #events-table td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+    #events-table th {
+        background-color: #f4f4f4;
+        position: sticky;
+        top: 0; /* Фіксація заголовка таблиці при скролі */
+    }
+`;
+    document.head.appendChild(tableStyles);
 </script>
 </body>
 </html>
